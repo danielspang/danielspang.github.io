@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<script>
+function cs() {
+    var scripts = document.getElementsByTagName('script');
+    var script = scripts[scripts.length - 1];
+    console.log("currentScript: " + document.currrentScript().src + " last scripttag: " + script.src)
+}
+</script>
+<script src="currentscript.js?a"></script>
+<script src="currentscript.js?b"></script>
+<script></script>
+<script src="currentscript.js?c"></script>
