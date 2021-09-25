@@ -70,4 +70,9 @@ document.querySelector('#skip_word').onclick = function (event) {
     event.preventDefault();
 }
 
-start()
+document.querySelector('#start').onclick = function (event) {
+    document.querySelector('#t0').style.display = "none";
+    document.querySelector('#t1').style.display = "initial";
+    event.preventDefault();
+    start();
+}

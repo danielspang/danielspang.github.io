@@ -27,18 +27,21 @@
     }
 
     form input {
-                padding: 10px;
+        padding: 10px;
     }
 
     button {
-        
+
         padding: 10px;
         margin: 10px;
     }
 </style>
 <div id=container>
-    <p id=log>&nbsp;</p>
-    <form><input autofocus><button>></button></form><button id=skip_word>Hoppa över</button>
+    <div id=t0><button id=start>STARTA</button></div>
+    <div id=t1 style="display: none;">
+        <p id=log>&nbsp;</p>
+        <form><input autofocus><button>></button></form><button id=skip_word>Hoppa över</button>
+    </div>
 </div>
 <script src="words.js"></script>
 <script src="spell.js"></script>
