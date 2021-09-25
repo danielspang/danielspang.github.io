@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>Stava</title>
+<style>
+    body,
+    html {
+        height: 100%;
+        margin: 0;
+        background-color: #701853;
+    }
+
+    div#container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        justify-content: center;
+        height: 100%;
+        font-size: 200%;
+        font-family: sans-serif;
+        color: white;
+    }
+
+    form input {
+                padding: 10px;
+    }
+
+    button {
+        
+        padding: 10px;
+        margin: 10px;
+    }
+</style>
+<div id=container>
+    <p id=log>&nbsp;</p>
+    <form><input autofocus><button>></button></form><button id=skip_word>Hoppa över</button>
+</div>
+<script src="words.js"></script>
+<script src="spell.js"></script>
