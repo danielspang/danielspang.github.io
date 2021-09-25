@@ -4,6 +4,7 @@ var voices = synth.getVoices();
 for (var i = 0; i < voices.length; i++) {
     if (voices[i].lang == 'sv-SE') {
         var voice = voices[i];
+        break;
     }
 }
 
@@ -40,10 +41,11 @@ async function fel(str) {
 
 var inputForm = document.querySelector('form');
 inputForm.onsubmit = function (event) {
-    var inputTxt = document.querySelector('input');
-    if (inputTxt.value == word) {
+    var input = document.querySelector('input');
+    input = input.toString().toLocaleLowerCase().trim();
+    if (input.value == word) {
         say("Rätt");
-        inputTxt.value = "\u00a0";
+        input.value = "";
         //inputTxt.blur();
         start();
     } else {
@@ -55,6 +57,7 @@ inputForm.onsubmit = function (event) {
 
 document.querySelector('#skip_word').onclick = function (event) {
     document.querySelector('p').innerText = "\u00a0"
+    document.querySelector('input').focus();
     start();
     event.preventDefault();
 }
