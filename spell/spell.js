@@ -12,6 +12,7 @@ async function say(what) {
     var synth = window.speechSynthesis;
     var utterThis = new SpeechSynthesisUtterance(what);
     utterThis.voice = voice;
+    utterThis.rate = 0.8;
     synth.speak(utterThis);
 }
 
@@ -19,9 +20,19 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function start() {
+async function start() {
     word = WORDS[Math.floor((Math.random() * 1000))];
     say(word);
+    await sleep(1000);
+    document.querySelector('input').value = "";
+}
+
+async function correct(str) {
+    say("Rätt");
+    await sleep(500);
+    //document.querySelector('input').value = "";
+    //inputTxt.blur();
+    await start();
 }
 
 async function fel(str) {
@@ -42,12 +53,9 @@ async function fel(str) {
 var inputForm = document.querySelector('form');
 inputForm.onsubmit = function (event) {
     var input = document.querySelector('input');
-    input = input.toString().toLocaleLowerCase().trim();
-    if (input.value == word) {
-        say("Rätt");
-        input.value = "";
-        //inputTxt.blur();
-        start();
+    let guess = input.value.toLocaleLowerCase().trim();
+    if (guess == word) {
+        correct(word);
     } else {
         fel(word);
 
