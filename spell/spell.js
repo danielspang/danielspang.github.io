@@ -28,7 +28,7 @@ async function start() {
 }
 
 async function correct(str) {
-    say("Rätt");
+    say(CORRECT[Math.floor((Math.random() * CORRECT.length))]);
     await sleep(500);
     //document.querySelector('input').value = "";
     //inputTxt.blur();
@@ -37,7 +37,8 @@ async function correct(str) {
 
 async function fel(str) {
     let p = document.querySelector('p');
-    say("Fel. Försök igen.");
+    say(INCORRECT[Math.floor((Math.random() * INCORRECT.length))]);
+    say(word);
     p.innerText = "\u00a0";
     for (c of word) {
         await sleep(500);
