@@ -1,0 +1,193 @@
+:root {
+    --primary: #FF5A5F;
+    --bg: #f4f4f4;
+    --card-bg: #ffffff;
+    --text: #333;
+    --danger: #ff4444;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg);
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+}
+
+header {
+    padding: 15px;
+    text-align: center;
+    background: #fff;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    z-index: 10;
+    flex-shrink: 0;
+}
+
+h1 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--text);
+}
+
+#deck-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: center;
+    scroll-behavior: smooth;
+}
+
+#empty-msg {
+    text-align: center;
+    color: #aaa;
+    font-size: 0.8rem;
+    margin-top: 20px;
+}
+
+.spacer {
+    height: 100px;
+    flex-shrink: 0;
+}
+
+.card {
+    background: var(--card-bg);
+    width: 90%;
+    max-width: 400px;
+    padding: 15px 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    position: relative;
+    animation: popIn 0.3s ease-out;
+}
+
+@keyframes popIn {
+    from {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.card-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.card-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.meta-data {
+    font-size: 0.75rem;
+    color: #888;
+    margin-top: 2px;
+}
+
+.play-btn-mini {
+    background: #f0f0f0;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #333;
+    font-size: 14px;
+}
+
+.play-btn-mini:active {
+    background: #e0e0e0;
+}
+
+.delete-btn {
+    background: transparent;
+    border: none;
+    color: #ccc;
+    font-size: 1.5rem;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    margin-right: -10px;
+}
+
+.delete-btn:active {
+    color: var(--danger);
+}
+
+#controls {
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    background: #fff;
+    box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.05);
+    flex-shrink: 0;
+    position: relative;
+    z-index: 20;
+}
+
+#record-btn {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background-color: var(--primary);
+    border: none;
+    box-shadow: 0 4px 15px rgba(255, 90, 95, 0.4);
+    outline: none;
+    cursor: pointer;
+    transition: transform 0.1s, background-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+}
+
+#record-btn:active,
+#record-btn.recording {
+    transform: scale(1.15);
+    background-color: #ff2a2f;
+}
+
+#record-btn svg {
+    fill: white;
+    width: 28px;
+    height: 28px;
+}
+
+.status-text {
+    position: absolute;
+    top: -30px;
+    width: 100%;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--primary);
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+}
+
+.status-text.visible {
+    opacity: 1;
+}
