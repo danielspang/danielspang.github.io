@@ -4,9 +4,25 @@ let startTime;
 let audioContext;
 let currentlyPlaying = null; // Track currently playing audio
 let isInitialized = false; // Track if app is initialized
+let isRecording = false; // Track recording state
 const recordBtn = document.getElementById('record-btn');
 const deckContainer = document.getElementById('deck-container');
 const statusText = document.getElementById('status-text');
+
+// Prevent text selection during recording on iOS
+document.addEventListener('selectstart', (e) => {
+    if (isRecording) {
+        e.preventDefault();
+        return false;
+    }
+});
+
+document.addEventListener('contextmenu', (e) => {
+    if (isRecording && e.target.closest('#controls')) {
+        e.preventDefault();
+        return false;
+    }
+});
 
 // Initialize audio context and setup on start button click
 async function initializeApp() {
@@ -111,6 +127,17 @@ recordBtn.addEventListener('mouseleave', handleButtonRelease);
 recordBtn.addEventListener('touchstart', handleButtonPress);
 recordBtn.addEventListener('touchend', handleButtonRelease);
 
+// Prevent context menu and text selection on iOS
+recordBtn.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    return false;
+});
+
+recordBtn.addEventListener('selectstart', (e) => {
+    e.preventDefault();
+    return false;
+});
+
 // Handle single click for start mode
 recordBtn.addEventListener('click', (e) => {
     if (!isInitialized) {
@@ -144,6 +171,7 @@ function startRecording() {
 
     audioChunks = [];
     startTime = Date.now(); 
+    isRecording = true;
     mediaRecorder.start();
     
     recordBtn.classList.add('recording');
@@ -154,6 +182,7 @@ function stopRecording() {
     if (!mediaRecorder || mediaRecorder.state !== 'recording') return;
 
     mediaRecorder.stop();
+    isRecording = false;
 
     recordBtn.classList.remove('recording');
     statusText.classList.remove('visible');
