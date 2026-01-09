@@ -211,8 +211,8 @@ h1 {
 }
     
 #record-btn.start-mode {
-    background-color: #28a745;
-    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+    background-color: #28a745 !important;
+        box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4) !important;
 }
 #record-btn:active,
 #record-btn.recording {
@@ -220,7 +220,7 @@ h1 {
 }
 
 #record-btn.start-mode:active {
-    background-color: #218838;
+    background-color: #218838 !important;
 }
 
 #record-btn.recording {
@@ -230,7 +230,7 @@ h1 {
 #record-btn .start-content {
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: center;
     color: white;
     font-weight: 600;
     font-size: 0.9rem;
@@ -251,8 +251,9 @@ h1 {
 }
 
 #record-btn .checkmark {
-    font-size: 1.2rem;
+    font-size: 1.8rem;
     font-weight: bold;
+    line-height: 1;
 }
 #record-btn svg {
     fill: white;
@@ -260,6 +261,21 @@ h1 {
     height: 28px;
 }
 
+/* iPhone-specific fixes */
+@supports (-webkit-touch-callout: none) {
+    #record-btn.start-mode {
+        background-color: #28a745 !important;
+        box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4) !important;
+    }
+
+    #record-btn.start-mode .start-content {
+        display: flex !important;
+    }
+
+    #record-btn.start-mode .record-content {
+        display: none !important;
+    }
+}
 .status-text {
     position: absolute;
     top: -30px;
