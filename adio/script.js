@@ -1,10 +1,21 @@
 let mediaRecorder;
 let audioChunks = [];
 let startTime; 
+let audioContext;
 const recordBtn = document.getElementById('record-btn');
 const deckContainer = document.getElementById('deck-container');
 const statusText = document.getElementById('status-text');
 const emptyMsg = document.getElementById('empty-msg');
+
+// Initialize audio context on first user interaction (iOS requirement)
+function initAudioContext() {
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioContext.state === 'suspended') {
+            audioContext.resume();
+        }
+    }
+}
 
 async function setupAudio() {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -22,10 +33,13 @@ async function setupAudio() {
         });
         
         let options = {};
+        // iOS prefers mp4, but fallback to webm for other browsers
         if (MediaRecorder.isTypeSupported('audio/mp4')) {
             options = { mimeType: 'audio/mp4' };
         } else if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
             options = { mimeType: 'audio/webm;codecs=opus' };
+        } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+            options = { mimeType: 'audio/webm' };
         }
 
         mediaRecorder = new MediaRecorder(stream, options);
@@ -51,6 +65,10 @@ setupAudio();
 
 function startRecording(e) {
     e.preventDefault(); 
+    
+    // Initialize audio context on user gesture (iOS requirement)
+    initAudioContext();
+    
     if (!mediaRecorder) return;
     if (mediaRecorder.state === 'recording') return;
 
@@ -86,14 +104,22 @@ function createAudioCard(durationInSeconds) {
     const audioUrl = URL.createObjectURL(blob);
     
     const audio = new Audio(audioUrl);
-    audio.autoplay = true; 
     
-    const playPromise = audio.play();
-    if (playPromise !== undefined) {
-        playPromise.catch(error => {
-            console.log("Autoplay blocked:", error);
-        });
-    }
+    // iOS-friendly audio setup
+    audio.preload = 'auto';
+    audio.load();
+    
+    // Since user just interacted (recorded), we can autoplay immediately
+    // Small delay to ensure blob is ready
+    setTimeout(() => {
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(error => {
+                console.log("Autoplay blocked:", error);
+                // If autoplay fails, user can still manually play
+            });
+        }
+    }, 100);
 
     const card = document.createElement('div');
     card.className = 'card';
@@ -103,7 +129,7 @@ function createAudioCard(durationInSeconds) {
 
     card.innerHTML = `
         <div class="card-left">
-            <button class="play-btn-mini">▶</button>
+            <button class="play-btn-mini" title="Tap to play">▶</button>
             <div class="card-info">
                 <strong>Audio Clip</strong>
                 <span class="meta-data">${timeString} • ${durationString}</span>
@@ -113,9 +139,22 @@ function createAudioCard(durationInSeconds) {
     `;
 
     const playBtn = card.querySelector('.play-btn-mini');
-    playBtn.addEventListener('click', () => {
-        audio.currentTime = 0;
-        audio.play();
+    playBtn.addEventListener('click', async () => {
+        try {
+            audio.currentTime = 0;
+            await audio.play();
+        } catch (error) {
+            console.log("Playback failed:", error);
+            // Fallback: try to reload and play
+            audio.load();
+            setTimeout(async () => {
+                try {
+                    await audio.play();
+                } catch (retryError) {
+                    console.log("Retry playback failed:", retryError);
+                }
+            }, 100);
+        }
     });
 
     const deleteBtn = card.querySelector('.delete-btn');
