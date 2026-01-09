@@ -207,14 +207,53 @@ h1 {
     justify-content: center;
     -webkit-tap-highlight-color: transparent;
     user-select: none;
+    position: relative;
 }
-
+    
+#record-btn.start-mode {
+    background-color: #28a745;
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+}
 #record-btn:active,
 #record-btn.recording {
     transform: scale(1.15);
+}
+
+#record-btn.start-mode:active {
+    background-color: #218838;
+}
+
+#record-btn.recording {
     background-color: #ff2a2f;
 }
 
+#record-btn .start-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: white;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+#record-btn .record-content {
+    display: none;
+}
+
+#record-btn:not(.start-mode) .start-content {
+    display: none;
+}
+
+#record-btn:not(.start-mode) .record-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#record-btn .checkmark {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
 #record-btn svg {
     fill: white;
     width: 28px;

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -9,6 +10,7 @@
     <link rel="stylesheet" href="style.css">
     <script src="script.js" defer></script>
 </head>
+
 <body>
 
     <header>
@@ -16,24 +18,25 @@
     </header>
 
     <div id="deck-container">
-        <div id="start-screen">
-            <button id="start-btn">Start Voice Deck</button>
-            <p>Tap to enable audio and microphone</p>
-        </div>
-        <div id="main-content" style="display: none;">
-            <div id="empty-msg">
-                Hold to record.<br>Release to play.
-            </div>
-            <div class="spacer"></div>
-        </div>
+        <div class="spacer"></div>
     </div>
 
     <div id="controls">
         <div class="status-text" id="status-text">Recording...</div>
-        <button id="record-btn">
-            <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+        <button id="record-btn" class="start-mode">
+            <span class="start-content">
+                <span class="checkmark">✓</span>
+            </span>
+            <span class="record-content">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
+                    <path
+                        d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
+                </svg>
+            </span>
         </button>
     </div>
 
 </body>
+
 </html>

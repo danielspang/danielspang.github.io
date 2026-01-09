@@ -3,16 +3,15 @@ let audioChunks = [];
 let startTime; 
 let audioContext;
 let currentlyPlaying = null; // Track currently playing audio
+let isInitialized = false; // Track if app is initialized
 const recordBtn = document.getElementById('record-btn');
 const deckContainer = document.getElementById('deck-container');
 const statusText = document.getElementById('status-text');
-const emptyMsg = document.getElementById('empty-msg');
-const startBtn = document.getElementById('start-btn');
-const startScreen = document.getElementById('start-screen');
-const mainContent = document.getElementById('main-content');
 
 // Initialize audio context and setup on start button click
 async function initializeApp() {
+    if (isInitialized) return;
+    
     try {
         // Initialize audio context
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -23,9 +22,10 @@ async function initializeApp() {
         // Setup audio recording
         await setupAudio();
         
-        // Hide start screen and show main content
-        startScreen.style.display = 'none';
-        mainContent.style.display = 'flex';
+        // Switch button to record mode
+        recordBtn.classList.remove('start-mode');
+        
+        isInitialized = true;
         
     } catch (error) {
         console.error('Failed to initialize app:', error);
@@ -33,7 +33,6 @@ async function initializeApp() {
     }
 }
 
-// Initialize audio context on first user interaction (iOS requirement)
 function initAudioContext() {
     if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -103,14 +102,42 @@ async function setupAudio() {
 }
 
 // Event listeners
-startBtn.addEventListener('click', initializeApp);
+recordBtn.addEventListener('mousedown', handleButtonPress);
+recordBtn.addEventListener('mouseup', handleButtonRelease);
+recordBtn.addEventListener('mouseleave', handleButtonRelease);
+
+recordBtn.addEventListener('touchstart', handleButtonPress);
+recordBtn.addEventListener('touchend', handleButtonRelease);
+
+// Handle single click for start mode
+recordBtn.addEventListener('click', (e) => {
+    if (!isInitialized) {
+        e.preventDefault();
+        // Click is handled by handleButtonPress
+    }
+});
+
+function handleButtonPress(e) {
+    e.preventDefault();
+    
+    if (!isInitialized) {
+        // First click - initialize the app
+        initializeApp();
+        return;
+    }
+    
+    // Already initialized - start recording
+    startRecording(e);
+}
+
+function handleButtonRelease() {
+    if (!isInitialized) return;
+    
+    // Stop recording
+    stopRecording();
+}
 
 function startRecording(e) {
-    e.preventDefault(); 
-    
-    // Initialize audio context on user gesture (iOS requirement)
-    initAudioContext();
-    
     if (!mediaRecorder) return;
     if (mediaRecorder.state === 'recording') return;
 
@@ -120,11 +147,9 @@ function startRecording(e) {
     
     recordBtn.classList.add('recording');
     statusText.classList.add('visible');
-    if(emptyMsg) emptyMsg.style.display = 'none';
 }
 
-function stopRecording(e) {
-    if (e) e.preventDefault();
+function stopRecording() {
     if (!mediaRecorder || mediaRecorder.state !== 'recording') return;
 
     mediaRecorder.stop();
@@ -132,13 +157,6 @@ function stopRecording(e) {
     recordBtn.classList.remove('recording');
     statusText.classList.remove('visible');
 }
-
-recordBtn.addEventListener('mousedown', startRecording);
-recordBtn.addEventListener('mouseup', stopRecording);
-recordBtn.addEventListener('mouseleave', stopRecording);
-
-recordBtn.addEventListener('touchstart', startRecording);
-recordBtn.addEventListener('touchend', stopRecording);
 
 function createAudioCard(durationInSeconds) {
     const type = (audioChunks[0] && audioChunks[0].type) || 'audio/mp4';
