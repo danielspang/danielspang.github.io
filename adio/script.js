@@ -14,7 +14,8 @@ async function initializeApp() {
     
     try {
         // Initialize audio context
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const AudioContextClass = window.AudioContext || window['webkitAudioContext'];
+        audioContext = new AudioContextClass();
         if (audioContext.state === 'suspended') {
             await audioContext.resume();
         }
@@ -35,7 +36,8 @@ async function initializeApp() {
 
 function initAudioContext() {
     if (!audioContext) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const AudioContextClass = window.AudioContext || window['webkitAudioContext'];
+        audioContext = new AudioContextClass();
         if (audioContext.state === 'suspended') {
             audioContext.resume();
         }
@@ -117,8 +119,7 @@ recordBtn.addEventListener('click', (e) => {
     }
 });
 
-function handleButtonPress(e) {
-    e.preventDefault();
+function handleButtonPress() {
     
     if (!isInitialized) {
         // First click - initialize the app
@@ -127,7 +128,7 @@ function handleButtonPress(e) {
     }
     
     // Already initialized - start recording
-    startRecording(e);
+    startRecording();
 }
 
 function handleButtonRelease() {
@@ -137,7 +138,7 @@ function handleButtonRelease() {
     stopRecording();
 }
 
-function startRecording(e) {
+function startRecording() {
     if (!mediaRecorder) return;
     if (mediaRecorder.state === 'recording') return;
 
@@ -168,34 +169,16 @@ function createAudioCard(durationInSeconds) {
     // iOS-friendly audio setup
     audio.preload = 'auto';
     audio.load();
-    
-    // Since user just interacted (recorded), we can autoplay immediately
-    // Stop any currently playing audio first
-    stopCurrentAudio();
-    
-    // Set this as currently playing
-    currentlyPlaying = audio;
-    
-    // Small delay to ensure blob is ready
-    setTimeout(() => {
-        const playPromise = audio.play();
-        if (playPromise !== undefined) {
-            playPromise.catch(error => {
-                console.log("Autoplay blocked:", error);
-                currentlyPlaying = null;
-            });
-        }
-    }, 100);
 
     const card = document.createElement('div');
-    card.className = 'card';
+    card.className = 'card new-recording';
     
     const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const durationString = durationInSeconds.toFixed(1) + "s"; 
 
     card.innerHTML = `
         <div class="card-left">
-            <button class="play-btn-mini" title="Tap to play/stop">▶</button>
+            <button class="play-btn-mini auto-play" title="Tap to play/stop">▶</button>
             <div class="card-info">
                 <strong>Audio Clip</strong>
                 <span class="meta-data">${timeString} • ${durationString}</span>
@@ -209,41 +192,45 @@ function createAudioCard(durationInSeconds) {
     // Store reference to play button on audio object
     audio.playButton = playBtn;
     
-    // Handle play/pause toggle
-    playBtn.addEventListener('click', async () => {
+    // Create unified play function that works for both manual and auto play
+    const playAudio = async () => {
         try {
-            if (currentlyPlaying === audio && !audio.paused) {
-                // Stop current audio
-                audio.pause();
-                audio.currentTime = 0;
-                playBtn.textContent = '▶';
-                playBtn.classList.remove('playing');
-                currentlyPlaying = null;
-            } else {
-                // Stop any other playing audio
-                stopCurrentAudio();
-                
-                // Play this audio
-                audio.currentTime = 0;
-                await audio.play();
-                playBtn.textContent = '⏸';
-                playBtn.classList.add('playing');
-                currentlyPlaying = audio;
-            }
+            // Stop any other playing audio
+            stopCurrentAudio();
+            
+            // Play this audio
+            audio.currentTime = 0;
+            await audio.play();
+            playBtn.textContent = '⏸';
+            playBtn.classList.add('playing');
+            playBtn.classList.remove('auto-play');
+            currentlyPlaying = audio;
+            
+            // Remove new recording highlight after playing
+            card.classList.remove('new-recording');
+            
+            return true;
         } catch (error) {
             console.log("Playback failed:", error);
-            // Fallback: try to reload and play
-            audio.load();
-            setTimeout(async () => {
-                try {
-                    await audio.play();
-                    playBtn.textContent = '⏸';
-                    playBtn.classList.add('playing');
-                    currentlyPlaying = audio;
-                } catch (retryError) {
-                    console.log("Retry playback failed:", retryError);
-                }
-            }, 100);
+            // Reset button state on failure
+            playBtn.textContent = '▶';
+            playBtn.classList.remove('playing');
+            playBtn.classList.add('auto-play');
+            return false;
+        }
+    };
+    
+    // Handle play/pause toggle
+    playBtn.addEventListener('click', async () => {
+        if (currentlyPlaying === audio && !audio.paused) {
+            // Pause current audio
+            audio.pause();
+            audio.currentTime = 0;
+            playBtn.textContent = '▶';
+            playBtn.classList.remove('playing');
+            currentlyPlaying = null;
+        } else {
+            await playAudio();
         }
     });
     
@@ -269,5 +256,64 @@ function createAudioCard(durationInSeconds) {
     const spacer = document.querySelector('.spacer');
     deckContainer.insertBefore(card, spacer);
     
+    // Signal that recording is complete and ready for playback
+    showRecordingComplete(card, playAudio);
+    
     spacer.scrollIntoView({ behavior: 'smooth' });
+}
+
+// Show recording completion feedback and attempt autoplay
+function showRecordingComplete(card, playAudio) {
+    // Add visual feedback that recording is complete
+    const playBtn = card.querySelector('.play-btn-mini');
+    
+    // Pulse animation to draw attention
+    playBtn.classList.add('pulse');
+    
+    // Try autoplay immediately (works if user gesture is still active)
+    setTimeout(async () => {
+        const success = await playAudio();
+        
+        if (!success) {
+            // Autoplay failed - show clear visual cue to tap play
+            playBtn.classList.add('ready-to-play');
+            
+            // Show temporary tooltip
+            showPlayPrompt(card);
+        }
+        
+        // Remove pulse after attempt
+        playBtn.classList.remove('pulse');
+    }, 200);
+}
+
+// Show a temporary prompt to encourage user to tap play
+function showPlayPrompt(card) {
+    const prompt = document.createElement('div');
+    prompt.className = 'play-prompt';
+    prompt.textContent = 'Tap to play';
+    
+    card.appendChild(prompt);
+    
+    // Remove prompt after 3 seconds or when user taps play
+    const removePrompt = () => {
+        if (prompt.parentNode) {
+            prompt.style.opacity = '0';
+            setTimeout(() => {
+                if (prompt.parentNode) {
+                    prompt.remove();
+                }
+            }, 300);
+        }
+    };
+    
+    setTimeout(removePrompt, 3000);
+    
+    // Remove prompt when user clicks play
+    const playBtn = card.querySelector('.play-btn-mini');
+    const handlePlay = () => {
+        removePrompt();
+        playBtn.removeEventListener('click', handlePlay);
+    };
+    playBtn.addEventListener('click', handlePlay);
 }
