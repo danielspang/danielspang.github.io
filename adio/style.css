@@ -42,6 +42,47 @@ h1 {
     scroll-behavior: smooth;
 }
 
+#start-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    gap: 20px;
+}
+
+#start-btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 25px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(255, 90, 95, 0.4);
+    transition: transform 0.1s, background-color 0.2s;
+}
+
+#start-btn:active {
+    transform: scale(0.95);
+    background-color: #ff2a2f;
+}
+
+#start-screen p {
+    color: #888;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+#main-content {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: center;
+    height: 100%;
+}
 #empty-msg {
     text-align: center;
     color: #aaa;
@@ -110,12 +151,17 @@ h1 {
     justify-content: center;
     color: #333;
     font-size: 14px;
+    transition: background-color 0.2s;
 }
 
 .play-btn-mini:active {
     background: #e0e0e0;
 }
 
+.play-btn-mini.playing {
+    background: var(--primary);
+    color: white;
+}
 .delete-btn {
     background: transparent;
     border: none;
