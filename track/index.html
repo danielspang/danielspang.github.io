@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>GPS Trace & Log</title>
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="GPS Trace" />
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230a84ff'/><path d='M25 70 L45 45 L60 55 L75 30' fill='none' stroke='white' stroke-width='8' stroke-linecap='round' stroke-linejoin='round'/><circle cx='75' cy='30' r='7' fill='%2332d74b'/></svg>" />
+  <style>
+    :root { --bg: #0f1115; --card: #181b21; --text: #f3f4f6; --muted: #9ca3af; --accent: #0a84ff; --danger: #ff453a; --success: #32d74b; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom) 16px; display: flex; flex-direction: column; min-height: 100vh; }
+    header { padding: 16px 0 12px; display: flex; justify-content: space-between; align-items: center; }
+    h1 { font-size: 20px; margin: 0; font-weight: 700; }
+    .badge { font-size: 12px; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,0.08); color: var(--muted); font-weight: 600; }
+    .badge.active { background: rgba(50, 215, 75, 0.15); color: var(--success); }
+    .badge.error { background: rgba(255, 69, 58, 0.15); color: var(--danger); }
+    
+    .error-box { display: none; background: rgba(255, 69, 58, 0.15); border: 1px solid rgba(255, 69, 58, 0.4); color: #ff8a84; padding: 12px; border-radius: 12px; font-size: 13px; margin-bottom: 14px; line-height: 1.4; }
+    
+    /* SVG Trace Box */
+    .trace-box { position: relative; background: var(--card); border-radius: 16px; height: 220px; width: 100%; margin-bottom: 14px; overflow: hidden; border: 1px solid rgba(255,255,255,0.06); }
+    svg { width: 100%; height: 100%; display: block; }
+    .trace-meta { position: absolute; top: 10px; left: 12px; right: 12px; display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); pointer-events: none; }
+    
+    /* Stats Grid */
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .card { background: var(--card); padding: 12px 14px; border-radius: 14px; }
+    .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin-bottom: 4px; }
+    .value { font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
+    
+    /* Controls */
+    .btn-row { display: flex; gap: 10px; margin-bottom: 14px; }
+    button { flex: 1; padding: 13px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); font-size: 14px; font-weight: 600; cursor: pointer; background: var(--card); color: var(--text); transition: 0.2s; }
+    button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    button.secondary { flex: 0 0 auto; padding: 13px 16px; color: var(--muted); }
+
+    /* Log Console */
+    .log-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .log-box { background: var(--card); border-radius: 14px; padding: 10px 12px; height: 160px; overflow-y: auto; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; line-height: 1.5; border: 1px solid rgba(255,255,255,0.06); }
+    .log-entry { border-bottom: 1px solid rgba(255,255,255,0.05); padding: 4px 0; color: #d1d5db; }
+    .log-entry:last-child { border-bottom: none; }
+    .log-time { color: var(--accent); margin-right: 6px; }
+    .log-err { color: var(--danger); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>GPS Trace</h1>
+    <span id="status" class="badge">Waiting...</span>
+  </header>
+
+  <div id="errorBox" class="error-box"></div>
+
+  <div class="trace-box">
+    <div class="trace-meta">
+      <span id="pointCount">0 points</span>
+      <span id="scaleLabel">Scale: Auto</span>
+    </div>
+    <svg id="traceSvg" viewBox="0 0 300 200" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
+          <path d="M 30 0 L 0 0 0 30" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+        </pattern>
+      </defs>
+      <rect width="300" height="200" fill="url(#grid)" />
+      <polyline id="traceLine" fill="none" stroke="#0a84ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="" />
+      <circle id="startDot" cx="-10" cy="-10" r="4" fill="#9ca3af" />
+      <circle id="currentDot" cx="-10" cy="-10" r="5" fill="#32d74b" stroke="#ffffff" stroke-width="2" />
+    </svg>
+  </div>
+
+  <div class="grid">
+    <div class="card"><div class="label">Latitude</div><div id="lat" class="value">—</div></div>
+    <div class="card"><div class="label">Longitude</div><div id="lng" class="value">—</div></div>
+    <div class="card"><div class="label">Accuracy</div><div id="acc" class="value">—</div></div>
+    <div class="card"><div class="label">Speed</div><div id="spd" class="value">—</div></div>
+  </div>
+
+  <div class="btn-row">
+    <button id="audioBtn">Keep-Alive Audio: OFF</button>
+    <button id="clearBtn" class="secondary">Clear</button>
+  </div>
+
+  <div class="log-header">
+    <span>Location Log</span>
+    <span id="logCount">0 entries</span>
+  </div>
+  <div id="logBox" class="log-box"></div>
+
+  <script>
+    const points = [];
+    const statusEl = document.getElementById('status');
+    const errorBox = document.getElementById('errorBox');
+    const traceLine = document.getElementById('traceLine');
+    const startDot = document.getElementById('startDot');
+    const currentDot = document.getElementById('currentDot');
+    const logBox = document.getElementById('logBox');
+
+    function addLog(text, isError = false) {
+      const time = new Date().toLocaleTimeString();
+      const entry = document.createElement('div');
+      entry.className = 'log-entry' + (isError ? ' log-err' : '');
+      entry.innerHTML = `<span class="log-time">[${time}]</span>${text}`;
+      logBox.prepend(entry);
+      document.getElementById('logCount').textContent = `${logBox.children.length} entries`;
+    }
+
+    function showError(msg) {
+      statusEl.textContent = 'Error';
+      statusEl.className = 'badge error';
+      errorBox.style.display = 'block';
+      errorBox.textContent = msg;
+      addLog(msg, true);
+    }
+
+    function renderTrace() {
+      document.getElementById('pointCount').textContent = `${points.length} point${points.length === 1 ? '' : 's'}`;
+      if (points.length === 0) {
+        traceLine.setAttribute('points', '');
+        startDot.setAttribute('cx', -10);
+        currentDot.setAttribute('cx', -10);
+        document.getElementById('scaleLabel').textContent = 'Scale: Auto';
+        return;
+      }
+
+      const lats = points.map(p => p.lat);
+      const lngs = points.map(p => p.lng);
+      const minLat = Math.min(...lats), maxLat = Math.max(...lats);
+      const minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
+
+      // Account for longitude compression at current latitude
+      const midLatRad = ((minLat + maxLat) / 2) * (Math.PI / 180);
+      const cosLat = Math.cos(midLatRad) || 1;
+
+      const latSpan = Math.max(maxLat - minLat, 0.0001);
+      const lngSpan = Math.max((maxLng - minLng) * cosLat, 0.0001);
+      const maxSpan = Math.max(latSpan, lngSpan);
+
+      // Approximate span in meters for display
+      const meters = Math.round(maxSpan * 111320);
+      document.getElementById('scaleLabel').textContent = `Span: ~${meters}m`;
+
+      const width = 300, height = 200, pad = 28;
+      const drawW = width - pad * 2;
+      const drawH = height - pad * 2;
+
+      const svgCoords = points.map(p => {
+        const normX = points.length === 1 ? 0.5 : (((p.lng - minLng) * cosLat) / maxSpan);
+        const normY = points.length === 1 ? 0.5 : ((p.lat - minLat) / maxSpan);
+        // Center trace inside viewport
+        const offsetX = (1 - (lngSpan / maxSpan)) * 0.5;
+        const offsetY = (1 - (latSpan / maxSpan)) * 0.5;
+        const x = pad + (normX + offsetX) * drawW;
+        const y = height - pad - (normY + offsetY) * drawH; // Invert Y so North is up
+        return [x.toFixed(1), y.toFixed(1)];
+      });
+
+      traceLine.setAttribute('points', svgCoords.map(c => c.join(',')).join(' '));
+
+      const first = svgCoords[0];
+      const last = svgCoords[svgCoords.length - 1];
+      startDot.setAttribute('cx', first[0]);
+      startDot.setAttribute('cy', first[1]);
+      currentDot.setAttribute('cx', last[0]);
+      currentDot.setAttribute('cy', last[1]);
+    }
+
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      points.length = 0;
+      logBox.innerHTML = '';
+      document.getElementById('logCount').textContent = '0 entries';
+      renderTrace();
+      addLog('Trace and log cleared.');
+    });
+
+    if (!('geolocation' in navigator)) {
+      showError('Geolocation not supported.');
+    } else {
+      addLog('Starting GPS watcher...');
+      navigator.geolocation.watchPosition(
